@@ -12,7 +12,7 @@ folder onto the controlling machine.
 
 ## How ccat works
 
-## Requirement Completion=
+## Requirement Completion
 ### Remote shell access to host
 
 ### Persist across reboots

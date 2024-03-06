@@ -1,10 +1,24 @@
-# Inspiration
+# Brainstorming/Casserole Document
+## Inspiration
 I want to do the project in Golang to get more experience with using Go (it's
 been a while, but it remember it being fun).
 
-I think [merlin](https://github.com/Ne0nd0g/merlin) and [related projects](https://github.com/topics/backdoor?l=go) offer good inspiration.
+I think [merlin](https://github.com/Ne0nd0g/merlin) and [backdoor projects](https://github.com/topics/backdoor?l=go)
+and [remote access trojans](https://github.com/topics/remote-access-trojan) offer good inspiration.
 
-# Sending/receiving commands
+## Resources (could be useful when writing the blog)
+- for building [your own Go authentication service from scratch](https://mattermost.com/blog/how-to-build-an-authentication-microservice-in-golang-from-scratch/)
+  - I chose not to do this because of time constraints
+- a [comparison of Go authentication services](https://www.jetbrains.com/guide/go/tutorials/authentication-for-go-apps/auth/)
+  - I chose to use JSON Web Token-based authentication because of the flexibility of encryption
+  - also, I later found out that the server doesn't store the tokens for the sessions, it's the *client's* responsibility
+    - if I understood the assignment correctly, that means that the backdoor won't store any info that could be used for compromise
+- [Okta blogpost JWT with Go](https://auth0.com/blog/authentication-in-golang/)
+- [LogRocket example walkthrough](https://blog.logrocket.com/jwt-authentication-go/)
+- [jwt library](https://github.com/golang-jwt/jwt)
+- [TCP and UDP servers in Go](https://www.linode.com/docs/guides/developing-udp-and-tcp-clients-and-servers-in-go/)
+
+## Sending/receiving commands
 - the target needs root access
 - also need some form of authentication
 
@@ -50,3 +64,4 @@ To communicate, keep a port open, listening to incoming messages
 - Tripwire
 - network traffic (Wireshark, maybe Burp?)
 - not sure what else. ask for advice to make it more advanced
+
