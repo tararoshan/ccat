@@ -1,32 +1,9 @@
 # Brainstorming/Casserole Document
 ## Inspiration
-I want to do the project in Golang to get more experience with using Go (it's
-been a while, but it remember it being fun).
+I think I misinterpreted the assignment. 🤡
 
-I think [merlin](https://github.com/Ne0nd0g/merlin) and [backdoor projects](https://github.com/topics/backdoor?l=go)
-and [remote access trojans](https://github.com/topics/remote-access-trojan) offer good inspiration.
-
-## Resources (could be useful when writing the blog)
-- for building [your own Go authentication service from scratch](https://mattermost.com/blog/how-to-build-an-authentication-microservice-in-golang-from-scratch/)
-  - I chose not to do this because of time constraints
-- a [comparison of Go authentication services](https://www.jetbrains.com/guide/go/tutorials/authentication-for-go-apps/auth/)
-  - I chose to use JSON Web Token-based authentication because of the flexibility of encryption
-  - also, I later found out that the server doesn't store the tokens for the sessions, it's the *client's* responsibility
-    - if I understood the assignment correctly, that means that the backdoor won't store any info that could be used for compromise
-- [Okta blogpost JWT with Go](https://auth0.com/blog/authentication-in-golang/)
-- [LogRocket example walkthrough](https://blog.logrocket.com/jwt-authentication-go/)
-- [jwt library](https://github.com/golang-jwt/jwt)
-- [TCP and UDP servers in Go](https://www.linode.com/docs/guides/developing-udp-and-tcp-clients-and-servers-in-go/)
-
-## Sending/receiving commands
-- the target needs root access
-- also need some form of authentication
-
-To communicate, keep a port open, listening to incoming messages
-- make it seem like nothing's going on, redirect traffic to another port?
-
-## How ccat works
-- maybe draw an outline, add in pictures
+## Resources
+- [Beej's guide](https://beej.us/guide/bgnet/html//index.html#client-server-background).
 
 ## Requirement Completion
     Requirements:
@@ -40,6 +17,20 @@ To communicate, keep a port open, listening to incoming messages
     - authenticate its communication and/or commands. We don't want another
       attacker taking over our system.
     - attempt to hide itself from at least one detection method.
+
+#### TODO
+1. Send a CUSTOM message to the server
+  - have the server print out what it receives
+  - have the client print out a message from the server (eg. timestamp)
+2. Keep an open connection to the server
+3. Run each message as a sh process input
+
+4. figure out how to make it work with firewalls?
+5. figure out more advanced authentication than just a password ;-;
+6. hide from detection
+
+## How ccat works
+- maybe draw an outline, add in pictures
 
 ### Remote shell access to host
 - do it SSH-style
@@ -64,4 +55,3 @@ To communicate, keep a port open, listening to incoming messages
 - Tripwire
 - network traffic (Wireshark, maybe Burp?)
 - not sure what else. ask for advice to make it more advanced
-
