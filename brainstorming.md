@@ -1,33 +1,43 @@
 # Brainstorming/Casserole Document
-## Inspiration
 I think I misinterpreted the assignment. 🤡
 
 ## Resources
-- [Beej's guide](https://beej.us/guide/bgnet/html//index.html#client-server-background).
-
-## Requirement Completion
-    Requirements:
-    - provide remote root shell access to the system it's running on. From the
-      controlling host, we should be able to send commands to the backdoored
-      week4 machine.
-    - persist even if the machine reboots. 
-    - have some sort of configuration for where it gets commands from. This can
-      be a file, argument, source code modification, etc. This way we can test
-      it out, even if our controller host has a different address than yours.
-    - authenticate its communication and/or commands. We don't want another
-      attacker taking over our system.
-    - attempt to hide itself from at least one detection method.
+- 
 
 #### TODO
-1. Send a CUSTOM message to the server
-  - have the server print out what it receives
-  - have the client print out a message from the server (eg. timestamp)
-2. Keep an open connection to the server
-3. Run each message as a sh process input
+1. Have the compromised client periodically call out/launch
+    - make the program sleep for 2 minutes in a loop if it couldn't connect
+2. Provide a remote shell
+    - once they've connected, have the client stay awake and listen
+    - hide behind a commonly used process name or try to change the name in the
+      kernel? to make it not appear. Could also have the program run this before
+      actually trying to connect for the first time
+    - HOW DO I DO THIS AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+3. Persist if the machine reboots
+    - store in memory
+    - Rootkit: can modify system files, kernel modules, or boot processes to
+      conceal malicious processes and network connections. Advanced rootkits may
+      employ techniques such as kernel-level hooking, process hiding, and memory
+      manipulation to evade detection by security tools.
+    - Process Injection
+      - python https://ancat.github.io/python/2019/01/01/python-ptrace.html
+4. Configuration for testing
+    - edit the source code. create them as variables at the top of the files
+5. Authenticate communication
+    - chp 9 of the book I found
+    - check it works with firewalls!
+6. Hide from detection
+    - wipe out system logs in /var/log
+    - process hiding (process list) rootkit
+    - sleep to avoid lots of network traffic
+7. Extra credit script
 
-4. figure out how to make it work with firewalls?
-5. figure out more advanced authentication than just a password ;-;
-6. hide from detection
+----------------------------------------------------------------------------------------------------
+
+# Future Work
+Making the C version.
+- [Beej's Networking Guide](https://beej.us/guide/bgnet/html//index.html#client-server-background).
+- https://github.com/prownd/remote-shell/tree/master
 
 ## How ccat works
 - maybe draw an outline, add in pictures
@@ -40,9 +50,6 @@ I think I misinterpreted the assignment. 🤡
   - OR have it in a cron job
   - OR find a way to keep it in memory. eg modify bootup (UEFI?) so that it cURLs from a server
     - abnormal network traffic; *ask others for advice!*
-
-### Configuration for where to get commands
-- maybe a simple file, maybe built into the code itself
 
 ### Authenticate communication
 - asymmetric encryption? it'll take much longer
