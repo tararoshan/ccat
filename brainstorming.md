@@ -9,13 +9,13 @@ I think I misinterpreted the assignment. 🤡
     - make the program sleep for 2 minutes in a loop if it couldn't connect
 2. Provide a remote shell
     - once they've connected, have the client stay awake and listen
-    - hide behind a commonly used process name or try to change the name in the
+**    - hide behind a commonly used process name or try to change the name in the
       kernel? to make it not appear. Could also have the program run this before
       actually trying to connect for the first time
     - HOW DO I DO THIS AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 3. Persist if the machine reboots
-    - store in memory
-    - Rootkit: can modify system files, kernel modules, or boot processes to
+**    - store in memory
+**    - Rootkit: can modify system files, kernel modules, or boot processes to
       conceal malicious processes and network connections. Advanced rootkits may
       employ techniques such as kernel-level hooking, process hiding, and memory
       manipulation to evade detection by security tools.
@@ -24,13 +24,14 @@ I think I misinterpreted the assignment. 🤡
 4. Configuration for testing
     - edit the source code. create them as variables at the top of the files
 5. Authenticate communication
-    - chp 9 of the book I found
+**    - chp 9 of the book I found
     - check it works with firewalls!
 6. Hide from detection
-    - wipe out system logs in /var/log
-    - process hiding (process list) rootkit
+**    - wipe out system logs in /var/log
+**    - process hiding (process list) rootkit
     - sleep to avoid lots of network traffic
 7. Extra credit script
+**    - something?
 
 ----------------------------------------------------------------------------------------------------
 

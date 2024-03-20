@@ -17,21 +17,34 @@ sleep_sec = 10
 ########################
 
 # Sleep
-time.sleep(sleep_sec)
+# time.sleep(sleep_sec)
 
 # Create a socket to connect to the server
-connection_socket = socket.socket()
+connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connection_socket.settimeout(CONNECTION_TIMEOUT)
+# connection_socket.connect(ADDRESS)
+
+# Determine if the connection is live
+def is_socket_connected():
+    try:
+        unix_exit_code = socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+        print(unix_exit_code)
+        return True if unix_exit_code == 0 else False
+    except socket.error as e:
+        print("error: ", e)
+        return False  # Catch any errors from checking the socket status
 
 # Connect to the server or sleep
 def sleep_or_connect():
-    while connection_socket.getpeername() == -1:
+    while not is_socket_connected():
         try:
+            print("result: ", is_socket_connected())
+            time.sleep(2)
             connection_socket.connect(ADDRESS)
         except socket.timeout:
             # Sleep for twice the previous amound and try again
             sleep_sec = min(sleep_sec * 2, MAX_SLEEP)
-            time.sleep(sleep_sec)
+            # time.sleep(sleep_sec)
 
 sleep_or_connect()
 

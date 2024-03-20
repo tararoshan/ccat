@@ -5,7 +5,7 @@ import socket
 import configuration as config  # Import configuration file
 
 # CONSTANTS & GLOBALS
-ADDRESS = (config.SERVER_ADDR, config.SERVER_PORT)
+ADDRESS = (config.INTERNAL_SERVER_ADDR, config.SERVER_PORT)
 BACKLOG = 5  # Max number of queued connections, system-dependent
 
 ########################
@@ -13,7 +13,7 @@ BACKLOG = 5  # Max number of queued connections, system-dependent
 ########################
 
 # Create a socket to listen to incoming connections
-server_socket = socket.socket()
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Bind it to the server address and port
 server_socket.bind(ADDRESS)
 server_socket.listen(BACKLOG)
