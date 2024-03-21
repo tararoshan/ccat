@@ -28,6 +28,8 @@ print("Connected to %s on port %s" % (client_addr[0], client_addr[1]))
 message = "Test message!!!".encode()
 connection_socket.send(message)  # Need to add some asymmetric encryption
 
+# TODO before sending in loop, check if we need to reconnect!!!
+
 # Server REPL loop - run the interactive shell
 while True:
     # Read in command from input

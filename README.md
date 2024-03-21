@@ -15,7 +15,7 @@ folder onto the controlling machine.
 - cURL from a website (GitHub)
 - add in pictures, gifs
 - RUN THE SERVER BFORE THE CLIENT!!!
-
+- cannot cd and expect the client to remember -- need to do cd && whatever other command
 ## How ccat works
 
 ## Requirement Completion

