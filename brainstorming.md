@@ -26,6 +26,7 @@ I think I misinterpreted the assignment. 🤡
 5. Authenticate communication
 **    - chp 9 of the book I found
     - check it works with firewalls!
+    - https://nitratine.net/blog/post/asymmetric-encryption-and-decryption-in-python/
 6. Hide from detection
 **    - wipe out system logs in /var/log
 **    - process hiding (process list) rootkit
