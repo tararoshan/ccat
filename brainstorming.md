@@ -15,6 +15,7 @@ I think I misinterpreted the assignment. 🤡
     - HOW DO I DO THIS AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 3. Persist if the machine reboots
 **    - store in memory
+      - https://www.howtogeek.com/687970/how-to-run-a-linux-program-at-startup-with-systemd/
 **    - Rootkit: can modify system files, kernel modules, or boot processes to
       conceal malicious processes and network connections. Advanced rootkits may
       employ techniques such as kernel-level hooking, process hiding, and memory

