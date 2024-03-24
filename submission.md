@@ -78,6 +78,20 @@ working directory of the currently running process. So the next command you run
 won't be affected. If I had more time, I could flesh this out using the os.cwd()
 function.
 
+## How ccat Works
+In the installation section, we use `systmctl` to create a ccat.service file
+that will be used to run ccat.sh (which in turn runs the client.py script) after
+the machine has booted up.
+
+Once the script is run, the client reaches out to the server to see if it's
+available. If it's down, it sleeps and reaches out in a loop (to avoid being
+shown on the `top` list of processes). Once it's connected, the server and
+client exchange public RSA keys and the server sends out its password. If the
+password is correct, the controlling begins!
+
+Shell commands are executed using the `subprocess` python library and messages
+are encrypted using `pycryptodome`.
+
 ## Requirement Completion
 ### Remote shell access to host
 ccat uses the `subprocess` python library with the `shell=True` to run commands
