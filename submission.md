@@ -34,8 +34,8 @@ KillMode=process
 and then in the shell again, run
 ```shell
 chmod 640 /etc/systemd/system/ccat.service
-sudo systemctl daemon-reload  # You can use user/pass gg for root
-sudo systemctl enable ccat  # Have ccat service run at launch!
+systemctl daemon-reload  # You can use user/pass gg for root
+systemctl enable ccat  # Have ccat service run at launch!
 ```
 
 ### Server (Attacker)
@@ -50,22 +50,24 @@ curl -L https://github.com/tararoshan/ccat/raw/main/python-version/server.py -o 
 
 ## Testing
 To test that ccat works, run the server from the command machine (`python server.py`)
-and then run the client process (`python client.py`) on the compromised machine,
+and then run the client process in the background (`python client.py &`) on the compromised machine,
 or just reboot it after the installation process. To change configuration
 options like your IP address, see the first two lines of `configuration.py` and
-make sure you change this in both the *client and server* copies! :)
+make sure you change this in both the *client and server* copies! :) For example, I had to set the server address as 10.0.2.4.
 
 Alternatively, after setting up configuations, you can just run
 `sudo systemctl start ccat`.
 
-One way of figuring out the server's IP is by running `curl https://ipinfo.io/ip`
+One way of figuring out the server's IP is by running `ifconfig`
 from the attacking (server) machine (unless you're just running it as the hostOS,
 which is normally 10.0.0.2 for VirtualBox).
 
 One thing to note is that if you want to run a process in another directory, you
 need to run *cd /absolute/path/name && process_name*. That is, you can't change
 the current working directory of the shell (because each one is run as another
-process).[^1]
+process).[^1] Also, since the messages have padding to avoid a MITM attack,
+the commands have to be fairly small (eg. running even `cd /bin && ls` could
+fail because it's too long).
 
 [^1]: So you can technically change the working directory, but it'll be the
 working directory of the currently running process. So the next command you run
